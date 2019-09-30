@@ -1,26 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using IdentityApp.Models;
+﻿using IdentityApp.Models;
 using IdentityApp.Models.AccountViewModels;
 using IdentityApp.Services;
+using IdentityModel.Client;
 using IdentityServer4.Quickstart.UI;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace IdentityApp.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
@@ -59,6 +57,32 @@ namespace IdentityApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null)
         {
+            var client = new HttpClient();
+            var disco = client.GetDiscoveryDocumentAsync("http://localhost:5000").Result;
+            var tokenResponse = client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = disco.TokenEndpoint,
+                GrantType = "custom",
+                ClientId = "Aya",
+                ClientSecret = "secret",
+                Scope = "apiApp",
+                //UserName = "aya@gmail.com",
+                //Password = "P@ssw0rd",
+                //Parameters =
+                //     {
+                //        { "http://schemas.microsoft.com/ws/2008/06/identity/claims/role", "Admin"},
+                //      { "scope", "apiApp" }
+                //    }
+            }).Result;
+
+            //if (tokenResponse.IsError)
+            //{
+            //    Console.WriteLine(tokenResponse.Error);
+            //    return;
+            //}
+            var xxx = tokenResponse.Json;
+            //Console.WriteLine(tokenResponse.Json);
+            var token = tokenResponse.AccessToken;
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
@@ -77,6 +101,12 @@ namespace IdentityApp.Controllers
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                var claims = await _userManager.GetClaimsAsync(user);
+                await _userManager.RemoveClaimsAsync(user, claims);
+                var userRoleClaim = new Claim(ClaimTypes.Role, "Admin");
+                await _userManager.AddClaimAsync(user, userRoleClaim);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");

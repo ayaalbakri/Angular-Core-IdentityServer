@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Models;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace IdentityApp
 {
@@ -14,14 +16,31 @@ namespace IdentityApp
             {
                 new IdentityResources.OpenId(),
                 new IdentityResources.Profile(),
+                rolesResource,
+                new IdentityResource(ClaimTypes.Role, new[] { "Admin" })
+
             };
         }
+        private static IdentityResource rolesResource = new IdentityResource
+        {
+            Name = "roles",
+            DisplayName = "Your Roles",
+            Description = "Allow the service access to your user roles.",
+            UserClaims = new[] { JwtClaimTypes.Role, ClaimTypes.Role },
+            ShowInDiscoveryDocument = true,
+            Required = true,
+            Emphasize = true
+        };
+
 
         public static IEnumerable<ApiResource> GetApiResources()
         {
             return new List<ApiResource>
             {
-                new ApiResource("apiApp", "My API")
+                new ApiResource("apiApp", "My API",new []{ ClaimTypes.Role , JwtClaimTypes.Role}),
+                 //new ApiResource("Role", "Admin"),
+                 //new  ApiResource("apiApp", "My API",new []{ ClaimTypes.Role}),
+                 //new ApiResource("Rolesz", "My Roles", new[] { ClaimTypes.Role , JwtClaimTypes.Role})
             };
         }
 
@@ -45,7 +64,7 @@ namespace IdentityApp
                     },
 
                     // scopes that client has access to
-                    AllowedScopes = { "apiApp" }
+                    AllowedScopes = { "apiApp", "roles" }
                 },
 
                 // OpenID Connect implicit flow client (MVC)
@@ -53,6 +72,37 @@ namespace IdentityApp
                 {
                     ClientId = "mvc",
                     ClientName = "MVC Client",
+                    AllowedGrantTypes = GrantTypes.Implicit,
+
+                    RequireConsent = true,
+
+                    ClientSecrets =
+                    {
+                        new Secret("secret".Sha256())
+                    },
+                    AllowAccessTokensViaBrowser = true,
+                   // AllowedCorsOrigins = true,
+                    AlwaysSendClientClaims = true,
+                    AlwaysIncludeUserClaimsInIdToken = true,
+                    RedirectUris = { $"{configuration["ClientAddress"]}/signin-oidc" },
+                    PostLogoutRedirectUris = { $"{configuration["ClientAddress"]}/signout-callback-oidc" },
+
+                    AllowedScopes =
+                    {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        "apiApp",
+                         "roles",
+
+                    },
+                    AllowOfflineAccess = true
+                },
+
+
+                new Client
+                {
+                    ClientId = "Aya",
+                    ClientName = "Aya Client",
                     AllowedGrantTypes = GrantTypes.HybridAndClientCredentials,
 
                     RequireConsent = true,
@@ -61,7 +111,10 @@ namespace IdentityApp
                     {
                         new Secret("secret".Sha256())
                     },
-
+                    AllowAccessTokensViaBrowser = true,
+                   // AllowedCorsOrigins = true,
+                    AlwaysSendClientClaims = true,
+                    AlwaysIncludeUserClaimsInIdToken = true,
                     RedirectUris = { $"{configuration["ClientAddress"]}/signin-oidc" },
                     PostLogoutRedirectUris = { $"{configuration["ClientAddress"]}/signout-callback-oidc" },
 
@@ -69,11 +122,12 @@ namespace IdentityApp
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
-                        "apiApp"
+                        "apiApp",
+                         "roles",
+
                     },
                     AllowOfflineAccess = true
                 },
-
                 // OpenID Connect implicit flow client (Angular)
                 new Client
                 {
@@ -82,7 +136,10 @@ namespace IdentityApp
                     AllowedGrantTypes = GrantTypes.Implicit,
                     AllowAccessTokensViaBrowser = true,
                     RequireConsent = true,
-
+                    //AllowAccessTokensViaBrowser = true,
+                   // AllowedCorsOrigins = true,
+                    AlwaysSendClientClaims = true,
+                    AlwaysIncludeUserClaimsInIdToken = true,
                     RedirectUris = { $"{configuration["ClientAddress"]}/" },
                     PostLogoutRedirectUris = { $"{configuration["ClientAddress"]}/home" },
                     AllowedCorsOrigins = { configuration["ClientAddress"] },
@@ -91,7 +148,9 @@ namespace IdentityApp
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
-                        "apiApp"
+                        "apiApp",
+                        "roles"
+
                     },
 
                 }

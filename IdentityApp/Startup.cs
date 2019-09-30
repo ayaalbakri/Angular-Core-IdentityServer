@@ -1,15 +1,15 @@
-﻿using System.Reflection;
+﻿using IdentityApp.Data;
+using IdentityApp.Models;
+using IdentityApp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using IdentityApp.Data;
-using IdentityApp.Models;
-using IdentityApp.Services;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 
 namespace IdentityApp
 {
@@ -51,6 +51,8 @@ namespace IdentityApp
                         builder.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
                             db => db.MigrationsAssembly(migrationsAssembly));
                 })
+                 //.AddProfileService<ProfileService>()
+                 .AddCustomTokenRequestValidator<PoopRequestValidator>()
                 .AddOperationalStore(options =>
                 {
                     options.ConfigureDbContext = builder =>
@@ -58,11 +60,11 @@ namespace IdentityApp
                             db => db.MigrationsAssembly(migrationsAssembly));
                 });
 
-            services.AddAuthentication().AddTwitter(twitterOptions =>
-            {
-                twitterOptions.ConsumerKey = Configuration["Authentication:Twitter:ConsumerKey"];
-                twitterOptions.ConsumerSecret = Configuration["Authentication:Twitter:ConsumerSecret"];
-            });
+            //services.AddAuthentication().AddTwitter(twitterOptions =>
+            //{
+            //    twitterOptions.ConsumerKey = Configuration["Authentication:Twitter:ConsumerKey"];
+            //    twitterOptions.ConsumerSecret = Configuration["Authentication:Twitter:ConsumerSecret"];
+            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

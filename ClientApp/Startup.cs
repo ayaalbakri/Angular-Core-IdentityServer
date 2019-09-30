@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
@@ -7,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace ClientApp
 {
@@ -47,6 +47,8 @@ namespace ClientApp
                     options.ResponseType = "code id_token";
                     options.Scope.Add("apiApp");
                     options.Scope.Add("offline_access");
+                    options.Scope.Add("roles");
+                    options.Scope.Add("Role");
 
                     options.GetClaimsFromUserInfoEndpoint = true;
                     options.SaveTokens = true;

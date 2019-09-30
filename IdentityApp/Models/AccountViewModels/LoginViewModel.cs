@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace IdentityApp.Models.AccountViewModels
@@ -18,5 +19,6 @@ namespace IdentityApp.Models.AccountViewModels
 
         [Display(Name = "Remember me?")]
         public bool RememberMe { get; set; }
+        public ClaimsIdentity Name { get; internal set; }
     }
 }
